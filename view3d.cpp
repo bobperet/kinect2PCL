@@ -1,4 +1,3 @@
-// g++ KinectOneStream.cpp -std=c++11 -o main `pkg-config opencv --cflags --libs` `pkg-config freenect2 --cflags --libs`
 #include "view3d.h"
 #include <iostream>
 #include <stdio.h>
