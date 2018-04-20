@@ -1,3 +1,8 @@
+/*
+ * Copyright Bob Peret 2018
+ *
+ * A dense pointcloud does not contain NaN or INF
+ */
 #include "view3d.h"
 #include <iostream>
 #include <stdio.h>
@@ -15,10 +20,19 @@
 #include <opencv2/viz/vizcore.hpp>
 #include "opencv2/viz/types.hpp"
 
+#include <pcl/point_types.h>
+#include <pcl/pcl_base.h>
+#include <boost/thread/thread.hpp>
+#include <pcl/common/common_headers.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/console/parse.h>
+
+
+using namespace pcl;
 using namespace std;
 using namespace cv;
-
-void what(Mat M) ;
 
 View3d g_view3d;
 
@@ -37,6 +51,9 @@ int main()
  ****************************************************/
 void View3d::show(void)
 {
+	g_view3d.test();
+    exit(0);
+
     libfreenect2::Freenect2 freenect2;
     libfreenect2::Freenect2Device *dev = 0;
 
@@ -56,7 +73,6 @@ void View3d::show(void)
     }
 
     libfreenect2::SyncMultiFrameListener listener(libfreenect2::Frame::Depth);
-//    libfreenect2::SyncMultiFrameListener listener(libfreenect2::Frame::Depth | libfreenect2::Frame::Color);
     libfreenect2::FrameMap frames;
 
     dev->setIrAndDepthFrameListener(&listener);
@@ -66,16 +82,17 @@ void View3d::show(void)
     cout << "device serial: " << dev->getSerialNumber() << std::endl;
     cout << "device firmware: " << dev->getFirmwareVersion() << std::endl;
 
+
+
     Mat depthmat;
     Mat pCloud;
     viz::Viz3d viz("Viz window");
-    pCloud.create(512, 424, CV_32FC3);	// 512 wide
+    pCloud.create(View3dConsts::KinectCols, View3dConsts::KinectRows, CV_32FC3);	// 512 wide
     // loop while getting and displaying depth frames
     while(waitKey(1) < 0)
     {
         listener.waitForNewFrame(frames);
         libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
-    //    libfreenect2::Frame *rgb = frames[libfreenect2::Frame::Color];
 
         Mat(depth->height, depth->width, CV_32FC1, depth->data).copyTo(depthmat);
         viz.showWidget("text2d", viz::WText("Kinect-2", Point(20, 20), 20, viz::Color::yellow()));
@@ -110,7 +127,7 @@ void View3d::show(void)
  * what()
  * Shows what Mat type is
  ****************************************************/
-void what(Mat M)
+void View3d::what(Mat M)
 {
   int type = M.type();
   string r;
@@ -137,3 +154,29 @@ void what(Mat M)
 
 }
 
+void View3d::test(void)
+{
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+
+	  // Fill in the cloud data
+	  cloud->width  = 15;
+	  cloud->height = 1;
+	  cloud->points.resize (cloud->width * cloud->height);
+
+	  // Generate the data
+	  for (size_t i = 0; i < cloud->points.size (); ++i)
+	  {
+	    cloud->points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
+	    cloud->points[i].y = 1024 * rand () / (RAND_MAX + 1.0f);
+	    cloud->points[i].z = 1.0;
+	  }
+//	  boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
+	    pcl::visualization::PCLVisualizer viewer("3D Viewer");
+
+	    viewer.setBackgroundColor (0, 0, 0);
+	    viewer.addPointCloud<pcl::PointXYZ> (cloud, "sample cloud");
+	    viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
+	    viewer.addCoordinateSystem (1.0);
+	//    viewerinitCameraParameters ();
+//	    return (viewer);
+}
