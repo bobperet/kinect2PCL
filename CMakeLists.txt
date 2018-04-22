@@ -19,9 +19,11 @@ add_executable(view3d src/view3d.cpp)
 
 # dependencies
 FIND_PACKAGE(PkgConfig)   
-FIND_PACKAGE(PCL 1.3 REQUIRED)
+#FIND_PACKAGE(PCL 1.3 REQUIRED)
 FIND_PACKAGE(freenect2 REQUIRED)
 FIND_PACKAGE(OpenCV REQUIRED)
+FIND_PACKAGE(VTK REQUIRED)
+FIND_PACKAGE(PCL 1.3 REQUIRED COMPONENTS io common visualization) 
 
 
 include_directories( ${PCL_INCLUDE_DIRS} )
@@ -30,6 +32,8 @@ include_directories( ${PCL_INCLUDE_DIRS} )
   target_link_libraries(view3d 
 			${PCL_COMMON_LIBRARIES} 
 			${PCL_IO_LIBRARIES} 
+			${PCL_VISUALIZATION_LIBRARIES}
+			${PCL_LIBRARIES}
 			${OpenCV_LIBS}
 			${freenect2_LIBRARIES})
 

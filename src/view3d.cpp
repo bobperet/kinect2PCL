@@ -22,13 +22,13 @@
 
 #include <pcl/point_types.h>
 #include <pcl/pcl_base.h>
-#include <boost/thread/thread.hpp>
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/parse.h>
 
+#include <boost/thread/thread.hpp>
 
 using namespace pcl;
 using namespace std;
@@ -51,8 +51,8 @@ int main()
  ****************************************************/
 void View3d::show(void)
 {
-//	g_view3d.test();
-//    exit(0);
+	g_view3d.test();
+    while(1);
 
     libfreenect2::Freenect2 freenect2;
     libfreenect2::Freenect2Device *dev = 0;
@@ -156,27 +156,32 @@ void View3d::what(Mat M)
 
 void View3d::test(void)
 {
-//	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-//
-//	  // Fill in the cloud data
-//	  cloud->width  = 15;
-//	  cloud->height = 1;
-//	  cloud->points.resize (cloud->width * cloud->height);
-//
-//	  // Generate the data
-//	  for (size_t i = 0; i < cloud->points.size (); ++i)
-//	  {
-//	    cloud->points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
-//	    cloud->points[i].y = 1024 * rand () / (RAND_MAX + 1.0f);
-//	    cloud->points[i].z = 1.0;
-//	  }
-////	  boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
-//	    pcl::visualization::PCLVisualizer viewer("3D Viewer");
-//
-//	    viewer.setBackgroundColor (0, 0, 0);
-//	    viewer.addPointCloud<pcl::PointXYZ> (cloud, "sample cloud");
-//	    viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
-//	    viewer.addCoordinateSystem (1.0);
-//	//6+    viewerinitCameraParameters ();
-////	    return (viewer);
+	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+
+	  // Fill in the cloud data
+	  cloud->width  = 15;
+	  cloud->height = 1;
+	  cloud->points.resize (cloud->width * cloud->height);
+
+	  // Generate the data
+	  for (size_t i = 0; i < cloud->points.size (); ++i)
+	  {
+	    cloud->points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
+	    cloud->points[i].y = 1024 * rand () / (RAND_MAX + 1.0f);
+	    cloud->points[i].z = 1.0;
+	  }
+//	  boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis (pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
+	    pcl::visualization::PCLVisualizer viewer("3D Viewer");
+
+	    viewer.setBackgroundColor (0, 0, 0);
+	    viewer.addPointCloud<pcl::PointXYZ> (cloud, "sample cloud");
+	    viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "sample cloud");
+	    viewer.addCoordinateSystem (1.0);
+	    viewer.initCameraParameters ();
+//	    return (viewer);
+	    while (!viewer.wasStopped ())
+	    {
+	      viewer.spinOnce (100);
+	      boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+	  }
 }
