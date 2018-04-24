@@ -51,9 +51,6 @@ int main()
  ****************************************************/
 void View3d::show(void)
 {
-	g_view3d.test();
-    while(1);
-
     libfreenect2::Freenect2 freenect2;
     libfreenect2::Freenect2Device *dev = 0;
 
@@ -82,12 +79,15 @@ void View3d::show(void)
     cout << "device serial: " << dev->getSerialNumber() << std::endl;
     cout << "device firmware: " << dev->getFirmwareVersion() << std::endl;
 
-
-
     Mat depthmat;
-    Mat pCloud;
-    viz::Viz3d viz("Viz window");
-    pCloud.create(View3dConsts::KinectCols, View3dConsts::KinectRows, CV_32FC3);	// 512 wide
+
+    pcl::visualization::PCLVisualizer viewer("3D Viewer");
+    viewer.setBackgroundColor (0, 0, 0);
+    viewer.initCameraParameters ();
+
+    PointCloud<pcl::PointXYZ>::PointType pt;
+    PointCloud<pcl::PointXYZ>::Ptr cloud(new PointCloud<PointXYZ>);
+
     // loop while getting and displaying depth frames
     while(waitKey(1) < 0)
     {
@@ -95,28 +95,39 @@ void View3d::show(void)
         libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
 
         Mat(depth->height, depth->width, CV_32FC1, depth->data).copyTo(depthmat);
-        viz.showWidget("text2d", viz::WText("Kinect-2", Point(20, 20), 20, viz::Color::yellow()));
+//        imshow("x", depthmat/1024);
+        listener.release(frames);
 
-        // convert to 3D mat
-        for(int i = 0; i < depthmat.rows; i++)
+        cloud->clear();
+        // convert to PCL
+        for (int i = 0; i < depthmat.rows; i++)
         {
-            for(int j = 0; j < depthmat.cols; j++)
+            for (int j = 0; j < depthmat.cols; j++)
             {
-            	pCloud.at<Vec3f>(i,j)[0] = j;
-            	pCloud.at<Vec3f>(i,j)[1] = depthmat.rows -i;
-            	float p = depthmat.at<float>(i,j);
-            	if (p < View3dConsts::NearLimit){p=NAN;}				// limit close
-            	if (p > View3dConsts::FarLimit){p=NAN;}					// limit far
-            	pCloud.at<Vec3f>(i,j)[2] = p;
+             	float p = depthmat.at<float>(i,j);
+            	if ((p > View3dConsts::NearLimit) && (p < View3dConsts::FarLimit))
+            	{
+                	pt.x = j;
+            	    pt.y = depthmat.rows - i;
+            	    pt.z = p;
+            	    cloud->push_back(pt);
+            	}
             }
         }
 
-        viz::WCloud cloudWidget = viz::WCloud(pCloud, viz::Color::white());
-        viz.showWidget("kinect-2", cloudWidget);
+    	cloud->width  = View3dConsts::KinectCols;
+    	cloud->height = View3dConsts::KinectRows;
+    	cloud->is_dense = true;
 
-        listener.release(frames);
-        viz.spinOnce(1,true);
+    	viewer.addPointCloud<pcl::PointXYZ> (cloud, "Kinect2 depth");
+        viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "Kinect2 depth");
+        viewer.spinOnce (100);
+	    viewer.removePointCloud("Kinect2 depth");
 
+	    if (viewer.wasStopped())
+	    {
+	    	break;
+	    }
     }
     dev->stop();
     dev->close();
@@ -179,9 +190,9 @@ void View3d::test(void)
 	    viewer.addCoordinateSystem (1.0);
 	    viewer.initCameraParameters ();
 //	    return (viewer);
-	    while (!viewer.wasStopped ())
+	    while (!viewer.wasStopped())
 	    {
 	      viewer.spinOnce (100);
-	      boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+	      boost::this_thread::sleep(boost::posix_time::microseconds (100000));
 	  }
 }

@@ -5,9 +5,9 @@
 
 namespace View3dConsts
 {
-	const float NearLimit = 5.0;
+	const float NearLimit = 1000.0;
 	const float FarLimit = 2000.0;
-	const uint16_t KinectRows = 434;
+	const uint16_t KinectRows = 424;
 	const uint16_t KinectCols = 512;
 }
 
